@@ -64,6 +64,35 @@ const typeMap = {
     'house': 'Дом',
     'bungalo': 'Бунгало'
 }
+const adForm = document.querySelector('.ad-form');
+const adFormHeader = adForm.querySelector('.ad-form-header');
+const adFormElement = adForm.querySelectorAll('.ad-form__element');
+const map = document.querySelector('.map');
+const mapPinMain = map.querySelector('.map__pin--main');
+const address = adForm.querySelector('#address');
+
+adFormHeader.disabled = true;
+adFormElement.forEach((element) => {element.disabled = true});
+address.defaultValue = Math.round(mapPinMain.offsetLeft - mapPinMain.offsetWidth / 2) + ', ' + Math.round(mapPinMain.offsetTop - mapPinMain.offsetHeight / 2);
+
+//Функция активации страницы поиска похожих объявлений
+function initMap() {
+    adFormHeader.disabled = false;
+    adFormElement.forEach((element) => {element.disabled = false});
+    map.classList.remove('map--faded');
+}
+
+//Функция заполнения поля адреса
+function initAddress(evt) {
+    address.value = evt.pageX + ", " + evt.pageY;
+}
+
+//Временное решение по началу работы страницы (перетаскивание метки)
+mapPinMain.addEventListener('mouseup', function (evt) {
+   initMap();
+   initAddress(evt);
+   renderSimilarAdvertisements( makeArrayOfRandomAdvertisements() );
+});
 
 //функция нахождения рандомного целого числа в интервале min/max
 function getRandomInt(min, max) {
@@ -161,9 +190,9 @@ function renderMapPins(element) {
 function getAdvertisementPhotos(similarAdvertisementsData) {
     let advertisementPhotos = document.querySelector('template').content.querySelector('.popup__photo');
     let photosFragment = new DocumentFragment();
-    for (let i = 0; i < similarAdvertisementsData[0].offer.photos.length; i++) {
+    for (let i = 0; i < similarAdvertisementsData.offer.photos.length; i++) {
         let photoElement = advertisementPhotos.cloneNode(true);
-        photoElement.src = similarAdvertisementsData[0].offer.photos[i];
+        photoElement.src = similarAdvertisementsData.offer.photos[i];
 
         photosFragment.append(photoElement);
     }
@@ -212,18 +241,18 @@ function getAdvertisementFeatures(features) {
 function renderStartAdvertisement(similarAdvertisementsData) {
     let mapCard = document.querySelector('template').content.querySelector('.map__card');
     let startAdvertisement = mapCard.cloneNode(true);
-    startAdvertisement.querySelector('.popup__title').textContent = similarAdvertisementsData[0].offer.title;
-    startAdvertisement.querySelector('.popup__text--address').textContent = similarAdvertisementsData[0].offer.address; //с адресом что-то не то
-    startAdvertisement.querySelector('.popup__text--price').textContent = `${similarAdvertisementsData[0].offer.price}₽/ночь`;
-    startAdvertisement.querySelector('.popup__type').textContent = typeMap[similarAdvertisementsData[0].offer.type];
-    startAdvertisement.querySelector('.popup__text--capacity').textContent = `${similarAdvertisementsData[0].offer.rooms} комнаты для ${similarAdvertisementsData[0].offer.guests} гостей`;
-    startAdvertisement.querySelector('.popup__text--time').textContent = `Заезд после ${similarAdvertisementsData[0].offer.checkin}, выезд до ${similarAdvertisementsData[0].offer.checkout}`;
+    startAdvertisement.querySelector('.popup__title').textContent = similarAdvertisementsData.offer.title;
+    startAdvertisement.querySelector('.popup__text--address').textContent = similarAdvertisementsData.offer.address; //с адресом что-то не то
+    startAdvertisement.querySelector('.popup__text--price').textContent = `${similarAdvertisementsData.offer.price}₽/ночь`;
+    startAdvertisement.querySelector('.popup__type').textContent = typeMap[similarAdvertisementsData.offer.type];
+    startAdvertisement.querySelector('.popup__text--capacity').textContent = `${similarAdvertisementsData.offer.rooms} комнаты для ${similarAdvertisementsData.offer.guests} гостей`;
+    startAdvertisement.querySelector('.popup__text--time').textContent = `Заезд после ${similarAdvertisementsData.offer.checkin}, выезд до ${similarAdvertisementsData.offer.checkout}`;
     startAdvertisement.querySelector('.popup__features').innerHTML = '';
-    startAdvertisement.querySelector('.popup__features').append(getAdvertisementFeatures(similarAdvertisementsData[0].offer.features));
-    startAdvertisement.querySelector('.popup__description').textContent = similarAdvertisementsData[0].offer.description;//по заданию описание пустое
+    startAdvertisement.querySelector('.popup__features').append(getAdvertisementFeatures(similarAdvertisementsData.offer.features));
+    startAdvertisement.querySelector('.popup__description').textContent = similarAdvertisementsData.offer.description;//по заданию описание пустое
     startAdvertisement.querySelector('.popup__photo').remove();
     startAdvertisement.querySelector('.popup__photos').append( getAdvertisementPhotos(similarAdvertisementsData) );
-    startAdvertisement.querySelector('.popup__avatar').src = similarAdvertisementsData[0].author.avatar;
+    startAdvertisement.querySelector('.popup__avatar').src = similarAdvertisementsData.author.avatar;
 
     document.querySelector('.map__filters-container').before(startAdvertisement);
 }
@@ -232,14 +261,38 @@ function renderStartAdvertisement(similarAdvertisementsData) {
 function renderSimilarAdvertisements(similarAdvertisementsData) {
     renderMapPins( getPinsOnMap(similarAdvertisementsData) );
 
-    renderStartAdvertisement(similarAdvertisementsData);
+    const mapPinCollection = map.querySelectorAll('.map__pin');
+
+    console.log(mapPinCollection);
+    for (let i = 1; i < mapPinCollection.length; i++) {
+        mapPinCollection[i].addEventListener('click', function () {
+            const mapCard = map.querySelector('.map__card');
+            if (mapCard) {
+                mapCard.remove();
+            }
+            renderStartAdvertisement(similarAdvertisementsData[i - 1]);
+        });
+    }
+    /*mapPinCollection[1].addEventListener('click', function () {
+        renderStartAdvertisement(similarAdvertisementsData[0]);
+    });
+    mapPinCollection[2].addEventListener('click', function () {
+        renderStartAdvertisement(similarAdvertisementsData[1])
+    });
+    mapPinCollection[3].addEventListener('click', function () {
+        renderStartAdvertisement(similarAdvertisementsData[2])
+    });
+    mapPinCollection[4].addEventListener('click', function () {
+        renderStartAdvertisement(similarAdvertisementsData[3])
+    });*/
+    //renderStartAdvertisement(similarAdvertisementsData);
 
 }
 
 //Временное решение показа DOM элемента
-let map = document.querySelector('.map');
-map.classList.remove('map--faded');
+//let map = document.querySelector('.map');
+//map.classList.remove('map--faded');
 
-renderSimilarAdvertisements( makeArrayOfRandomAdvertisements() );
+//renderSimilarAdvertisements( makeArrayOfRandomAdvertisements() );
 
 
