@@ -5,6 +5,10 @@ const PIN_SIZE = {
     WIDTH: 50,
     HEIGHT: 70
 }
+const KEY_CODES = {
+    ENTER: 13,
+    ESC: 27
+}
 const ADVERTISEMENTS_DATA = {
     OFFER_TITLES : [
         'Большая уютная квартира',
@@ -80,6 +84,7 @@ function initMap() {
     adFormHeader.disabled = false;
     adFormElement.forEach((element) => {element.disabled = false});
     map.classList.remove('map--faded');
+    adForm.classList.remove('ad-form--disabled');
 }
 
 //Функция заполнения поля адреса
@@ -200,30 +205,6 @@ function getAdvertisementPhotos(similarAdvertisementsData) {
     return photosFragment;
 }
 
-//Функция определения удобств в данном предложении
-/*function getAdvertisementFeatures(features, startAdvertisement) {
-    //Выбираем удобства, которые нужно удалить из разметки
-    let advertisementFeatures = ADVERTISEMENTS_DATA.OFFER_FEATURES.slice();
-    for (let i = advertisementFeatures.length - 1; i >= 0; i--) {
-        for (let j = features.length - 1; j >= 0; j--) {
-            if (advertisementFeatures[i] === features[j]) {
-                advertisementFeatures.splice(i, 1);
-            }
-        }
-    }
-
-    //Формируем нужное название класса для поиска
-    for (let i = 0; i < advertisementFeatures.length; i++) {
-        advertisementFeatures[i] = '.popup__feature--' + advertisementFeatures[i];
-    }
-
-    for (let i = 0; i < advertisementFeatures.length; i++) {
-        startAdvertisement.querySelector(advertisementFeatures[i]).remove();
-    }
-
-    return startAdvertisement;
-}*/
-
 //Упрощенная функция определения удобств в данном предложении
 function getAdvertisementFeatures(features) {
     let featureFragment = new DocumentFragment();
@@ -257,6 +238,34 @@ function renderStartAdvertisement(similarAdvertisementsData) {
     document.querySelector('.map__filters-container').before(startAdvertisement);
 }
 
+//Функция открытия карточки метки
+const mapPinOpen = function (similarAdvertisementsData, i) {
+    const mapCard = map.querySelector('.map__card');
+    if (mapCard) {
+        mapCard.remove();
+    }
+    renderStartAdvertisement(similarAdvertisementsData[i - 1]);
+    const popupClose = map.querySelector('.popup__close');
+
+    popupClose.addEventListener('click', mapPinClose);
+    document.addEventListener('keydown', onMapCardESCPress);
+}
+
+//Функция закрытия карточки метки
+const mapPinClose = function () {
+    const mapCard = map.querySelector('.map__card');
+    mapCard.remove();
+
+    document.removeEventListener('keydown', onMapCardESCPress);
+}
+
+//Функция обработки нажатия на кнопку ESC
+const onMapCardESCPress = function (evt) {
+    if (evt.keyCode === KEY_CODES.ESC) {
+        mapPinClose();
+    }
+}
+
 //Главная функция, собирающая все отрисовки
 function renderSimilarAdvertisements(similarAdvertisementsData) {
     renderMapPins( getPinsOnMap(similarAdvertisementsData) );
@@ -265,34 +274,11 @@ function renderSimilarAdvertisements(similarAdvertisementsData) {
 
     console.log(mapPinCollection);
     for (let i = 1; i < mapPinCollection.length; i++) {
-        mapPinCollection[i].addEventListener('click', function () {
-            const mapCard = map.querySelector('.map__card');
-            if (mapCard) {
-                mapCard.remove();
-            }
-            renderStartAdvertisement(similarAdvertisementsData[i - 1]);
+        mapPinCollection[i].addEventListener('click', function (evt) {
+            evt.preventDefault();
+            mapPinOpen(similarAdvertisementsData, i);
         });
     }
-    /*mapPinCollection[1].addEventListener('click', function () {
-        renderStartAdvertisement(similarAdvertisementsData[0]);
-    });
-    mapPinCollection[2].addEventListener('click', function () {
-        renderStartAdvertisement(similarAdvertisementsData[1])
-    });
-    mapPinCollection[3].addEventListener('click', function () {
-        renderStartAdvertisement(similarAdvertisementsData[2])
-    });
-    mapPinCollection[4].addEventListener('click', function () {
-        renderStartAdvertisement(similarAdvertisementsData[3])
-    });*/
-    //renderStartAdvertisement(similarAdvertisementsData);
-
 }
-
-//Временное решение показа DOM элемента
-//let map = document.querySelector('.map');
-//map.classList.remove('map--faded');
-
-//renderSimilarAdvertisements( makeArrayOfRandomAdvertisements() );
 
 
