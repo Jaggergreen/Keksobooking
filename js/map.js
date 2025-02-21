@@ -5,10 +5,15 @@ const PIN_SIZE = {
     WIDTH: 50,
     HEIGHT: 70
 }
+const pinMainSize = {
+    width: 65,
+    height: 65
+}
 const KEY_CODES = {
     ENTER: 13,
     ESC: 27
 }
+const map = document.querySelector('.map');
 const ADVERTISEMENTS_DATA = {
     OFFER_TITLES : [
         'Большая уютная квартира',
@@ -54,8 +59,8 @@ const ADVERTISEMENTS_DATA = {
         'http://o0.github.io/assets/images/tokyo/hotel3.jpg'
     ],
     LOCATION_X : {
-        MIN : 300,
-        MAX : 1200
+        MIN : PIN_SIZE.WIDTH / 2,
+        MAX : map.offsetWidth - PIN_SIZE.WIDTH / 2,
     },
     LOCATION_Y : {
         MIN : 130,
@@ -71,9 +76,9 @@ const typeMap = {
 const adForm = document.querySelector('.ad-form');
 const adFormHeader = adForm.querySelector('.ad-form-header');
 const adFormElement = adForm.querySelectorAll('.ad-form__element');
-const map = document.querySelector('.map');
 const mapPinMain = map.querySelector('.map__pin--main');
 const address = adForm.querySelector('#address');
+
 
 adFormHeader.disabled = true;
 adFormElement.forEach((element) => {element.disabled = true});
@@ -86,18 +91,6 @@ function initMap() {
     map.classList.remove('map--faded');
     adForm.classList.remove('ad-form--disabled');
 }
-
-//Функция заполнения поля адреса
-function initAddress(evt) {
-    address.value = evt.pageX + ", " + evt.pageY;
-}
-
-//Временное решение по началу работы страницы (перетаскивание метки)
-mapPinMain.addEventListener('mouseup', function (evt) {
-   initMap();
-   initAddress(evt);
-   renderSimilarAdvertisements( makeArrayOfRandomAdvertisements() );
-});
 
 //функция нахождения рандомного целого числа в интервале min/max
 function getRandomInt(min, max) {
@@ -175,7 +168,7 @@ function getPinsOnMap(similarAdvertisementsData) {
     for (let i = 0; i < NUMBER_OF_ADVERTISEMENTS; i++) {
         let mapPinElement = mapPinTemplate.cloneNode(true);
         mapPinElement.style.left = similarAdvertisementsData[i].location.x - PIN_SIZE.WIDTH / 2 + 'px';
-        mapPinElement.style.top = similarAdvertisementsData[i].location.y + 'px'; //кривое условие задачи, если делать как просят с изменением координаты метки, то метка может улететь в небеса
+        mapPinElement.style.top = similarAdvertisementsData[i].location.y - PIN_SIZE.HEIGHT + 'px'; //кривое условие задачи, если делать как просят с изменением координаты метки, то метка может улететь в небеса
         mapPinElement.querySelector('img').src = similarAdvertisementsData[i].author.avatar;
         mapPinElement.querySelector('img').alt = similarAdvertisementsData[i].offer.title;
 
@@ -244,7 +237,7 @@ const mapPinOpen = function (similarAdvertisementsData, i) {
     if (mapCard) {
         mapCard.remove();
     }
-    renderStartAdvertisement(similarAdvertisementsData[i - 1]);
+    renderStartAdvertisement(similarAdvertisementsData[i]);
     const popupClose = map.querySelector('.popup__close');
 
     popupClose.addEventListener('click', mapPinClose);
@@ -266,14 +259,90 @@ const onMapCardESCPress = function (evt) {
     }
 }
 
+//Функция перемещения пользовательской метки на карте
+mapPinMain.addEventListener('mousedown', function (evt) {
+    evt.preventDefault();
+    //Вычисляем координаты за которые мы схватили метку
+    let cursorShiftX = evt.clientX - mapPinMain.getBoundingClientRect().left;
+    let cursorShiftY = pinMainSize.height - (evt.clientY - mapPinMain.getBoundingClientRect().top);
+
+    const startCoords = {
+        x: evt.pageX,
+        y: evt.pageY
+    }
+
+    //Функция вычисления координат кончика метки
+    function getPinMainCoords() {
+        const pinCoords = {
+            x: mapPinMain.offsetLeft + Math.round(mapPinMain.offsetWidth / 2),
+            y: mapPinMain.offsetTop + pinMainSize.height,
+        }
+
+        return pinCoords;
+    }
+
+    //Функция заполнения поля адреса
+    function initAddress() {
+        address.value = getPinMainCoords().x + ", " + getPinMainCoords().y;
+    }
+
+    const onMapPinMainMouseMove = function (moveEvt) {
+        moveEvt.preventDefault();
+
+        const shift = {
+            x: startCoords.x - moveEvt.pageX,
+            y: startCoords.y - moveEvt.pageY
+        }
+
+        if (moveEvt.pageX - cursorShiftX >= map.offsetLeft && moveEvt.pageX + (pinMainSize.width - cursorShiftX) <= (map.offsetWidth + map.offsetLeft)) {
+            startCoords.x = moveEvt.pageX;
+            mapPinMain.style.left = (mapPinMain.offsetLeft - shift.x) + 'px';
+        }
+
+        if (moveEvt.pageY + cursorShiftY >= ADVERTISEMENTS_DATA.LOCATION_Y.MIN && moveEvt.pageY + cursorShiftY <= ADVERTISEMENTS_DATA.LOCATION_Y.MAX) {
+            startCoords.y = moveEvt.pageY;
+            mapPinMain.style.top = (mapPinMain.offsetTop - shift.y) + 'px';
+        }
+
+        initAddress();
+    }
+
+    const onMapPinMainMouseUp = function (upEvt) {
+        upEvt.preventDefault();
+        //console.log(startCoords.x);
+        //console.log(startCoords.y);
+
+        initMap();
+        initAddress();
+        renderSimilarAdvertisements( makeArrayOfRandomAdvertisements() );
+
+        document.removeEventListener('mousemove', onMapPinMainMouseMove);
+        document.removeEventListener('mouseup', onMapPinMainMouseUp);
+    }
+
+    document.addEventListener('mousemove', onMapPinMainMouseMove);
+    document.addEventListener('mouseup', onMapPinMainMouseUp);
+})
+
 //Главная функция, собирающая все отрисовки
 function renderSimilarAdvertisements(similarAdvertisementsData) {
+    let mapPinCollection = map.querySelectorAll('.map__pin:not(.map__pin--main)');
+
+    console.log(mapPinMain.offsetWidth, mapPinMain.offsetHeight);
+    console.log(mapPinMain.getBoundingClientRect().width, mapPinMain.getBoundingClientRect().height);
+    if (map.querySelector('.map__pin:not(.map__pin--main)')) {
+        for (let j = mapPinCollection.length - 1; j >= 0; j--) {
+            mapPinCollection[j].remove();
+        }
+    }
+
     renderMapPins( getPinsOnMap(similarAdvertisementsData) );
 
-    const mapPinCollection = map.querySelectorAll('.map__pin');
+    mapPinCollection = map.querySelectorAll('.map__pin:not(.map__pin--main)');
 
-    console.log(mapPinCollection);
-    for (let i = 1; i < mapPinCollection.length; i++) {
+    for (let i = 0; i < mapPinCollection.length; i++) {
+        console.log(mapPinCollection[i].offsetWidth, mapPinCollection[i].offsetHeight);
+        console.log(mapPinCollection[i].getBoundingClientRect().width, mapPinCollection[i].getBoundingClientRect().height);
         mapPinCollection[i].addEventListener('click', function (evt) {
             evt.preventDefault();
             mapPinOpen(similarAdvertisementsData, i);
