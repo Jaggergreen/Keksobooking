@@ -11,11 +11,12 @@
             for (let i = 0; i < window.data.NUMBER_OF_ADVERTISEMENTS; i++) {
                 let mapPinElement = mapPinTemplate.cloneNode(true);
                 mapPinElement.style.left = similarAdvertisementsData[i].location.x - window.data.PIN_SIZE.WIDTH / 2 + 'px';
-                mapPinElement.style.top = similarAdvertisementsData[i].location.y - window.data.PIN_SIZE.HEIGHT + 'px'; //кривое условие задачи, если делать как просят с изменением координаты метки, то метка может улететь в небеса
+                mapPinElement.style.top = similarAdvertisementsData[i].location.y - window.data.PIN_SIZE.HEIGHT + 'px';
                 mapPinElement.querySelector('img').src = similarAdvertisementsData[i].author.avatar;
                 mapPinElement.querySelector('img').alt = similarAdvertisementsData[i].offer.title;
 
                 mapPinFragment.append(mapPinElement);
+                console.log(mapPinElement);
             }
 
             return mapPinFragment;

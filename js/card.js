@@ -19,6 +19,7 @@
     //Упрощенная функция определения удобств в данном предложении
     function getAdvertisementFeatures(features) {
         let featureFragment = new DocumentFragment();
+
         for (let i = 0; i < features.length; i++) {
             let popupFeature = document.createElement('li');
             popupFeature.classList.add('popup__feature');
@@ -35,16 +36,20 @@
             let mapCard = document.querySelector('template').content.querySelector('.map__card');
             let selectedAdvertisement = mapCard.cloneNode(true);
             selectedAdvertisement.querySelector('.popup__title').textContent = similarAdvertisementsData.offer.title;
-            selectedAdvertisement.querySelector('.popup__text--address').textContent = similarAdvertisementsData.offer.address; //с адресом что-то не то
+            selectedAdvertisement.querySelector('.popup__text--address').textContent = similarAdvertisementsData.offer.address;
             selectedAdvertisement.querySelector('.popup__text--price').textContent = `${similarAdvertisementsData.offer.price}₽/ночь`;
             selectedAdvertisement.querySelector('.popup__type').textContent = window.data.typeMap[similarAdvertisementsData.offer.type];
             selectedAdvertisement.querySelector('.popup__text--capacity').textContent = `${similarAdvertisementsData.offer.rooms} комнаты для ${similarAdvertisementsData.offer.guests} гостей`;
             selectedAdvertisement.querySelector('.popup__text--time').textContent = `Заезд после ${similarAdvertisementsData.offer.checkin}, выезд до ${similarAdvertisementsData.offer.checkout}`;
             selectedAdvertisement.querySelector('.popup__features').innerHTML = '';
-            selectedAdvertisement.querySelector('.popup__features').append(getAdvertisementFeatures(similarAdvertisementsData.offer.features));
-            selectedAdvertisement.querySelector('.popup__description').textContent = similarAdvertisementsData.offer.description;//по заданию описание пустое
+            if (similarAdvertisementsData.offer.features) {
+                selectedAdvertisement.querySelector('.popup__features').append(getAdvertisementFeatures(similarAdvertisementsData.offer.features));
+            }
+            selectedAdvertisement.querySelector('.popup__description').textContent = similarAdvertisementsData.offer.description;
             selectedAdvertisement.querySelector('.popup__photo').remove();
-            selectedAdvertisement.querySelector('.popup__photos').append(getAdvertisementPhotos(similarAdvertisementsData));
+            if (similarAdvertisementsData.offer.photos) {
+                selectedAdvertisement.querySelector('.popup__photos').append(getAdvertisementPhotos(similarAdvertisementsData));
+            }
             selectedAdvertisement.querySelector('.popup__avatar').src = similarAdvertisementsData.author.avatar;
 
             document.querySelector('.map__filters-container').before(selectedAdvertisement);

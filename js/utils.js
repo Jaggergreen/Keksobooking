@@ -7,6 +7,23 @@
         ESC: 27
     };
 
+    const GEO_COORDS = {
+        X: {
+            MIN: 35.65,
+            MAX: 35.7
+        },
+        Y: {
+            MIN: 139.69,
+            MAX: 139.8
+        }
+    };
+
+    //Диапазон отрисовки меток
+    const LOCATION_RANGE_Y = {
+        MIN: 130,
+        MAX: 630
+    };
+
     window.utils = {
         //Функция определения нажатия ESC
         isEscKeycode: function (evt) {
@@ -43,6 +60,17 @@
         makeCutArray: function (array) {
             let newArray = array.slice();
             return newArray.slice(0, window.utils.getRandomInt(1, newArray.length));
+        },
+
+        //Функция высчитывания координат метки, для ее отрисовки на карте (с учетом того, что приходят данные геопозиции)
+        getPositionOnMap: function (lat, lng) {
+            let pinCoords;
+            pinCoords = {
+                x: window.data.map.offsetWidth / (GEO_COORDS.X.MAX - GEO_COORDS.X.MIN) * (lat - GEO_COORDS.X.MIN),
+                y: (LOCATION_RANGE_Y.MAX - LOCATION_RANGE_Y.MIN) / (GEO_COORDS.Y.MAX - GEO_COORDS.Y.MIN) * (lng - GEO_COORDS.Y.MIN) + LOCATION_RANGE_Y.MIN
+            };
+
+            return pinCoords;
         }
     };
 })();
