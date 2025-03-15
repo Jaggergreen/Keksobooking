@@ -2,38 +2,13 @@
 
 (function() {
 
-    const pinMainSize = {
-        width: 65,
-        height: 65
-    };
-
     //Диапазон отрисовки меток
     const LOCATION_RANGE_Y = {
         MIN: 130,
         MAX: 630
     };
 
-    const adForm = document.querySelector('.ad-form');
-    const adFormHeader = adForm.querySelector('.ad-form-header');
-    const adFormElement = adForm.querySelectorAll('.ad-form__element');
-    const mapPinMain = window.data.map.querySelector('.map__pin--main');
-    const address = adForm.querySelector('#address');
-
-    adFormHeader.disabled = true;
-    adFormElement.forEach((element) => {
-        element.disabled = true
-    });
-    address.defaultValue = Math.round(mapPinMain.offsetLeft - mapPinMain.offsetWidth / 2) + ', ' + Math.round(mapPinMain.offsetTop - mapPinMain.offsetHeight / 2);
-
-    //Функция активации страницы поиска похожих объявлений
-    function initMap() {
-        adFormHeader.disabled = false;
-        adFormElement.forEach((element) => {
-            element.disabled = false
-        });
-        window.data.map.classList.remove('map--faded');
-        adForm.classList.remove('ad-form--disabled');
-    }
+    const mapPinMain = window.data.map.querySelector('.map__pin--main')
 
     //Функция открытия карточки метки
     const mapPinOpen = function (similarAdvertisementsData) {
@@ -69,17 +44,12 @@
 
         //Вычисляем координаты за которые мы схватили метку
         let cursorShiftX = evt.clientX - mapPinMain.getBoundingClientRect().left;
-        let cursorShiftY = pinMainSize.height - (evt.clientY - mapPinMain.getBoundingClientRect().top);
+        let cursorShiftY = mapPinMain.offsetHeight - (evt.clientY - mapPinMain.getBoundingClientRect().top);
 
         const startCoords = {
             x: evt.pageX,
             y: evt.pageY
         };
-
-        //Функция заполнения поля адреса
-        function initAddress() {
-            address.value = (mapPinMain.offsetLeft + Math.round(mapPinMain.offsetWidth / 2)) + ", " + (mapPinMain.offsetTop + pinMainSize.height);
-        }
 
         //Функция движения мышки с главным маркером
         const onMapPinMainMouseMove = function (moveEvt) {
@@ -90,7 +60,7 @@
                 y: startCoords.y - moveEvt.pageY
             }
 
-            if (moveEvt.pageX - cursorShiftX >= window.data.map.offsetLeft && moveEvt.pageX + (pinMainSize.width - cursorShiftX) <= (window.data.map.offsetWidth + window.data.map.offsetLeft)) {
+            if (moveEvt.pageX - cursorShiftX >= window.data.map.offsetLeft && moveEvt.pageX + (mapPinMain.offsetWidth - cursorShiftX) <= (window.data.map.offsetWidth + window.data.map.offsetLeft)) {
                 startCoords.x = moveEvt.pageX;
                 mapPinMain.style.left = (mapPinMain.offsetLeft - shift.x) + 'px';
             }
@@ -100,15 +70,15 @@
                 mapPinMain.style.top = (mapPinMain.offsetTop - shift.y) + 'px';
             }
 
-            initAddress();
+            window.form.initAddress();
         }
 
         //Функция отпускания метки
         const onMapPinMainMouseUp = function (upEvt) {
             upEvt.preventDefault();
 
-            initMap();
-            initAddress();
+            window.form.initMap();
+            window.form.initAddress();
             renderSimilarAdvertisements( window.data.advertisements );
 
             document.removeEventListener('mousemove', onMapPinMainMouseMove);

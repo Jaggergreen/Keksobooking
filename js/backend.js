@@ -3,7 +3,7 @@
 (function () {
 
     const URL = 'https://32.javascript.htmlacademy.pro/keksobooking';
-    const dataURL = 'https://32.javascript.htmlacademy.pro/keksobooking/data'
+    const dataURL = 'https://32.javascript.htmlacademy.pro/keksobooking/data';
 
     window.backend = {
         download: function (onLoad, onError) {
